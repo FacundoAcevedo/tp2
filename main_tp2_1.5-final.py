@@ -3,7 +3,7 @@
 #
 #       tp2_main.py
 #  Estructura: Nombre de la pelicula;Año;Director;Actor1,Actor2,...,ActorN;Genero
-#Version= 1.5-final 16.05.2012 12:20:55
+#Version= 1.6-final 18.05.2012 19:08:15
 
 
 #NOTAS:
@@ -126,8 +126,7 @@ def por_actor(actor,lector,cantidad_lineas,ruta_salida=None):
         if actor in (actores).split(","): #lista de actores
             entrar=False
             salt=str(randint(0,9**9))
-            actoresaux=(actores).split(",") #actores con los que
-            actoresaux.remove(actor)                    #trabajo
+            actoresaux = quita_actor(actores, actor)            
             diccionario[ano+"-"+salt]=[director,",".join(actoresaux),genero,peliculaaux]
             #usamos randint para implementar un pequeño "salt", ya que
             #si el actor hubiera actuado en mas de una pelicula
@@ -139,13 +138,7 @@ def por_actor(actor,lector,cantidad_lineas,ruta_salida=None):
             break
     ano_ordenado=ordena_claves(diccionario)
     for indice in range(len(diccionario)):
-        for caracter in ano_ordenado[indice]:
-            if caracter=="-":
-                break
-            else:
-                ano_sin_salt.append(caracter)
-    #El for anterior quita lo que haya a la derecha del -, incluyendo al
-    #guion
+        ano_sin_salt = quita_salt(ano_ordenado, indice)    
         estructuras([(diccionario[ano_ordenado[indice]])[3],"".join(ano_sin_salt),\
         (diccionario[ano_ordenado[indice]])[0],\
         (diccionario[ano_ordenado[indice]])[1],\
@@ -153,6 +146,25 @@ def por_actor(actor,lector,cantidad_lineas,ruta_salida=None):
         ano_sin_salt=[] #limpio la variable
     if ruta_salida:#Para que quede ordenado
         escribir_archivo(ruta_salida,"------------------\n")
+
+def quita_salt(ano_ordenado, indice):
+    """Quita la implementacion del salt"""
+    ano_sin_salt = []
+    for caracter in ano_ordenado[indice]:
+        if caracter=="-":
+            break
+        else:
+            ano_sin_salt.append(caracter)
+    return ano_sin_salt
+    
+
+def quita_actor(actores, actor):
+    """Recibe: cadena, cadena, Devuelve: lista
+    quita al actor entregado, de la lista de actores pasada"""
+    actoresaux=(actores).split(",") #actores con los que
+    actoresaux.remove(actor)                    #trabajo
+    return actoresaux
+    
 
 def ordena_claves(diccionario):
     """Recibe: diccionario, Devuelve: lista
@@ -174,54 +186,65 @@ def cruzar_datos(paquete,lector,cantidad_lineas,ruta_salida=None):
     """Recibe: cadena Devuelve: nada
     Busca las peliculas donde el actor y el direcctor trabajaron juntos"""
     #variables
-    actor_director=()
-    actor_ano=()
-    entrar=True
-    contador=0 #contador de uso generico
     #codigo
     if len(ruta_salida)==0:
         ruta_salida=None
     else: #Para que quede ordenado
         escribir_archivo(ruta_salida,"\n------------------\nCruze de Datos:" +paquete+"\n")
     if len(paquete.split(","))==2:
-
-
-        if ((paquete.split(","))[1].isdigit()): #verifica que el segundo
-                                                #campo sea digito
-            actor_ano=((paquete.split(","))[0],(paquete.split(","))[1])
-            for pelicula,ano,director,actores,genero in lector:
-                contador+=1
-                if (actor_ano[0] in actores.split(","))\
-                 and (actor_ano[1]==ano):
-                    entrar=False
-                    estructuras([pelicula,None,None,None,None,ruta_salida])
-                elif ((cantidad_lineas)==contador) and (entrar==True):
-                    print "Parece que no hay concidencias"
-                    break
-            if ruta_salida:#Para que quede ordenado
-                escribir_archivo(ruta_salida,"------------------\n")
-
+        if ((paquete.split(","))[1].isdigit()): 
+            #verifica que el segundo campo sea digito
+            actor_ano(paquete,lector,cantidad_lineas,ruta_salida)                                  
         elif ((paquete.split(","))[1].isdigit()==False):
              #verifica que el segundo campo no sea digito
-            actor_director=((paquete.split(","))[0],(paquete.split(","))[1])
-            for pelicula,ano,director,actores,genero in lector:
-                contador+=1
-                if (actor_director[0] in actores.split(",")) and\
-                 (actor_director[1]==director):
-                    entrar=False
-                    estructuras([pelicula,None,None,None,None,ruta_salida])
-                elif ((cantidad_lineas)==contador) and (entrar==True):
-                    print "Parece que no hay concidencias"
-                    break
-            if ruta_salida:#Para que quede ordenado
-                escribir_archivo(ruta_salida,"------------------\n")
+            actor_director(paquete,lector,cantidad_lineas,ruta_salida)
         else:
             print "Es posible que te hayas equivocado al ingresar los" \
             " datos"
-
-
     else:
         print "Parece que escribiste algo mal."
+
+def actor_ano(paquete,lector,cantidad_lineas,ruta_salida=None):
+        """Muetra o escribie los datos, cuando recibe un actor
+    y un año"""
+    actor_ano=()
+    contador=0 #contador de uso generico
+    entrar = True
+
+    actor_ano=((paquete.split(","))[0],(paquete.split(","))[1])
+    for pelicula,ano,director,actores,genero in lector:
+        contador+=1
+        if (actor_ano[0] in actores.split(","))\
+         and (actor_ano[1]==ano):
+            entrar=False
+            estructuras([pelicula,None,None,None,None,ruta_salida])
+        elif ((cantidad_lineas)==contador) and (entrar==True):
+            print "Parece que no hay concidencias"
+            break
+    if ruta_salida:#Para que quede ordenado
+        escribir_archivo(ruta_salida,"------------------\n")
+    
+    
+        
+def actor_director(paquete,lector,cantidad_lineas,ruta_salida=None):
+    """Muetra o escribie los datos, cuando recibe un actor
+    y un director"""
+    contador=0 #contador de uso generico
+    actor_director=()
+    entrar = True
+    actor_director=((paquete.split(","))[0],(paquete.split(","))[1])
+    for pelicula,ano,director,actores,genero in lector:
+        contador+=1
+        if (actor_director[0] in actores.split(",")) and\
+         (actor_director[1]==director):
+            entrar=False
+            estructuras([pelicula,None,None,None,None,ruta_salida])
+        elif ((cantidad_lineas)==contador) and (entrar==True):
+            print "Parece que no hay concidencias"
+            break
+    if ruta_salida:#Para que quede ordenado
+        escribir_archivo(ruta_salida,"------------------\n")
+    
 
 
 def escribir_archivo(ruta_salida,datos):
@@ -288,6 +311,7 @@ def quita_lineas_vacias(ruta):
 o no se tienen los permisos de lectura"
 
 def opcion1(datos_csv,cantidad_lineas,ruta_salida):
+    """Llama a las funciones de la opcion elegida"""
     pelicula=""
     mensaje_pelicula="¿De que película? "
     mensaje_escribir_archivo="Si desea guardar los datos en un archivo"\
@@ -300,6 +324,8 @@ def opcion1(datos_csv,cantidad_lineas,ruta_salida):
         raw_input("Presione Enter")
         
 def opcion2(datos_csv,cantidad_lineas,ruta_salida):
+    """Llama a las funciones de la opcion elegida"""
+
     actor=""
     mensaje_actor="Ingrese el nombre del actor: "
     mensaje_escribir_archivo="Si desea guardar los datos en un archivo"\
@@ -313,6 +339,7 @@ def opcion2(datos_csv,cantidad_lineas,ruta_salida):
     raw_input("Presione Enter")
     
 def opcion3(datos_csv,cantidad_lineas,ruta_salida):
+    """Llama a las funciones de la opcion elegida"""
     paquete=""
     mensaje_cruze="Ingrese un actor y un año/director: "
     mensaje_escribir_archivo="Si desea guardar los datos en un archivo"\
@@ -326,6 +353,7 @@ def opcion3(datos_csv,cantidad_lineas,ruta_salida):
     raw_input("Presione Enter")
 
 def opcion4(ruta):
+    """Llama a las funciones de la opcion elegida"""
     preguntas=["Nombre de la pelicula: ","Año: ","Director: ","Actores [a,b,c,...]:","Genero :"]
     for indice in range(5):
         if indice==0: #para mantener el formato
